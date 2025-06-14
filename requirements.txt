@@ -1,0 +1,7 @@
+Flask
+flask-cors
+requests
+langchain
+openai
+faiss-cpu
+gunicorn
