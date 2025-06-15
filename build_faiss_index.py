@@ -9,7 +9,7 @@ import tiktoken
 
 # Initialize OpenAI via AIPipe proxy (set your token here)
 import os
-os.environ["OPENAI_API_KEY"] = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIyZjIwMDEzOThAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.xwfjOlApCo0IL_qDnA9GePxB_2MkGhQAiZu4Ut_vCWU"
+os.environ["OPENAI_API_KEY"] = "sample-api-key"
 os.environ["OPENAI_API_BASE"] = "https://aiproxy.sanand.workers.dev/openai/v1/"
 
 def load_jsonl(filepath):
