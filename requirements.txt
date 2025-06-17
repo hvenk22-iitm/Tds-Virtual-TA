@@ -5,3 +5,6 @@ langchain
 openai
 faiss-cpu
 gunicorn
+langchain-community
+tiktoken
+traceback
