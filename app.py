@@ -126,7 +126,7 @@ def handle_api():
         
         return jsonify({
             "answer": answer.strip(),
-            "value": links
+            "links": links
         })
         
     except Exception as e:
