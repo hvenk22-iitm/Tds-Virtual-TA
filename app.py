@@ -8,7 +8,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from flask_cors import CORS
 
 # ==== Configuration ====
-API_KEY = "---------------------"
+API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIyZjIwMDEzOThAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.xwfjOlApCo0IL_qDnA9GePxB_2MkGhQAiZu4Ut_vCWU"
 BASE_URL = "https://aiproxy.sanand.workers.dev/openai"
 
 # ==== Setup ====
