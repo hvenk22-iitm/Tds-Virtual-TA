@@ -1,13 +1,14 @@
 import os
 import base64
 import requests
+import traceback
 from flask import Flask, request, jsonify
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from flask_cors import CORS
 
 # ==== Configuration ====
-API_KEY = "aiproxy-sample-api-key"
+API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIyZjIwMDEzOThAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.xwfjOlApCo0IL_qDnA9GePxB_2MkGhQAiZu4Ut_vCWU"
 BASE_URL = "https://aiproxy.sanand.workers.dev/openai"
 
 # ==== Setup ====
@@ -96,7 +97,7 @@ def call_gpt_api(prompt, image_b64=None):
 
 # ==== API Endpoint ====
 
-@app.route("/api/", methods=["POST"])
+@app.route("/api", methods=["POST"])
 def handle_api():
     try:
         data = request.get_json()
@@ -123,27 +124,14 @@ def handle_api():
                     "text": doc.page_content[:120].strip()
                 })
         
-        # Debug: Print what URLs we found
-        print(f"DEBUG: Found {len(links)} links from documents")
-        for link in links:
-            print(f"DEBUG: URL found: {link['url']}")
-        
-        # If no links found in metadata, try to extract from content or add expected URLs
-        if not any("discourse.onlinedegree" in link["url"] for link in links):
-            # Add the expected discourse URL if it's not found
-            expected_url = "https://discourse.onlinedegree.iitm.ac.in/t/ga5-question-8-clarification/155939"
-            links.append({
-                "url": expected_url,
-                "text": "GA5 Question 8 Clarification"
-            })
-            print(f"DEBUG: Added expected URL: {expected_url}")
-        
         return jsonify({
             "answer": answer.strip(),
             "value": links
         })
         
     except Exception as e:
+        traceback.print_exc()  
+        app.logger.exception("Exception occurred")
         return jsonify({"error": str(e)}), 500
 
 # ==== Run Server ====
