@@ -1,5 +1,8 @@
+from dotenv import load_dotenv
+load_dotenv()
 import os
-import base64
+import json
+import re
 import requests
 import traceback
 from flask import Flask, request, jsonify
@@ -8,7 +11,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from flask_cors import CORS
 
 # ==== Configuration ====
-API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIyZjIwMDEzOThAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.xwfjOlApCo0IL_qDnA9GePxB_2MkGhQAiZu4Ut_vCWU"
+API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://aiproxy.sanand.workers.dev/openai"
 
 # ==== Setup ====
@@ -16,7 +19,7 @@ app = Flask(__name__)
 CORS(app)
 embedding = OpenAIEmbeddings(model="text-embedding-3-small", 
                              base_url="https://aiproxy.sanand.workers.dev/openai/v1",
-                             api_key="eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIyZjIwMDEzOThAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.xwfjOlApCo0IL_qDnA9GePxB_2MkGhQAiZu4Ut_vCWU")
+                             api_key=API_KEY)
 db = FAISS.load_local("tds_faiss_index", embeddings=embedding, allow_dangerous_deserialization=True)
 
 # ==== Utilities ====
@@ -36,12 +39,6 @@ Context:
 
 Question: {question}
 
-Instructions:
-- If the question is about model choice (gpt-3.5-turbo-0125 vs gpt-4o-mini), clearly state the recommendation
-- If the question is about scores/grades, mention specific numbers if available
-- If the question is about Docker vs Podman, recommend Podman for the course but mention Docker is acceptable
-- If you don't have information about future events, clearly state that you don't know
-- Be concise but informative
 """
     return prompt
 
@@ -52,6 +49,20 @@ def prepare_image_part(image_b64):
             "url": f"data:image/webp;base64,{image_b64}"
         }
     }
+def normalize_url_to_topic_id(url, topic_id):
+    """Replace the last number in the URL path with the topic_id."""
+    return re.sub(r'/\d+/?$', f'/{topic_id}', url)
+
+def extract_json_from_answer(answer_text):
+    # Find content inside ```json ... ```
+    match = re.search(r"```json\s*(\{.*?\})\s*```", answer_text, re.DOTALL)
+    if match:
+        try:
+            parsed = json.loads(match.group(1))
+            return parsed.get("answer", answer_text), parsed.get("links", [])
+        except json.JSONDecodeError:
+            pass  
+    return answer_text.strip(), []
 
 def call_gpt_api(prompt, image_b64=None):
     messages = [
@@ -118,12 +129,20 @@ def handle_api():
         
         for doc in docs:
             url = doc.metadata.get("url", "")
+            print(url)
             if url:
                 links.append({
                     "url": url,
                     "text": doc.page_content[:120].strip()
                 })
-        
+        final_answer, embedded_links = extract_json_from_answer(answer)
+
+# Merge links (without duplicates)
+        link_urls = {link["url"] for link in links}
+        for elink in embedded_links:
+            if elink.get("url") not in link_urls:
+                links.append(elink)
+
         return jsonify({
             "answer": answer.strip(),
             "links": links
@@ -136,4 +155,4 @@ def handle_api():
 
 # ==== Run Server ====
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

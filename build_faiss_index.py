@@ -9,7 +9,7 @@ import tiktoken
 
 # Initialize OpenAI via AIPipe proxy (set your token here)
 import os
-os.environ["OPENAI_API_KEY"] = "sample-api-key"
+os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
 os.environ["OPENAI_API_BASE"] = "https://aiproxy.sanand.workers.dev/openai/v1/"
 
 def load_jsonl(filepath):
@@ -18,7 +18,7 @@ def load_jsonl(filepath):
 
 def load_all_data():
     course = load_jsonl("tds_course.jsonl")
-    discourse = load_jsonl("tds_discourse_posts.jsonl")
+    discourse = load_jsonl("tds_discourse_posts_2.jsonl")
     return course + discourse
 
 def to_documents(data):
@@ -39,7 +39,7 @@ def build_faiss():
 
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_base=os.environ["OPENAI_API_BASE"])
     db = FAISS.from_documents(chunks, embeddings)
-    db.save_local("tds_faiss_index")
+    db.save_local("tds_faiss_index_2")
 
     print(f"✅ Saved FAISS index with {len(chunks)} chunks")
 

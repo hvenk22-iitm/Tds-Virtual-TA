@@ -7,3 +7,4 @@ faiss-cpu
 gunicorn
 langchain-community
 tiktoken
+python-dotenv
